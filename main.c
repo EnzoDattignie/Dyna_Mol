@@ -3,12 +3,13 @@
 #include <math.h>
 #include <time.h>
 
-double sigma = 0.01;
+double sigma = 1;
 double epsilon = 1;
 #define M 1;
 static double dt = 0.1;
-static double L = 20;
-static int N = 1000;
+static double L = 4;
+const int n = 5;
+static int N = n*n;
 static double T = 1;
 static double t_max = 1;
 
@@ -112,21 +113,44 @@ int main () {
         for (int i = 0;i<N;i++) {
             update(&Liste[i]);
         }
+        return 0;
     }
+
+    int config_crist(struct Part Liste[]) {
+        double dl = L/(n);
+        int compteur = 0;
+        double posx = (dl-L)/2;
+        double posy = (dl-L)/2;
+        for (int i = 0;i<N;i++) {
+            compteur ++;
+            constructeur(&Liste[i],posx,posy);
+            posx = posx + dl;
+            if (compteur == n) {
+                posy = posy + dl;
+                posx = (dl-L)/2;;
+                compteur = 0;
+            }
+        }
+        return 0;
+    }
+
+    
 
     struct Part Liste[N];
-    for (int i = 0; i < N;i++) {
-        constructeur(&Liste[i],rng(),rng());
-    }
+    config_crist(Liste);
 
-    for (double t = 0; t < t_max;t=t+dt) {
-        Force_liste(Liste);
-        for (int i = 0; i < N;i++) {
-            afficher(&Liste[i]);
-        }
-        update_Liste(Liste);
-        printf("Temps : %f\n",t);
-    }
+    // for (int i = 0; i < N;i++) {
+    //     constructeur(&Liste[i],rng(),rng());
+    // }
+
+    // for (double t = 0; t < t_max;t=t+dt) {
+    //     Force_liste(Liste);
+    //     for (int i = 0; i < N;i++) {
+    //         afficher(&Liste[i]);
+    //     }
+    //     update_Liste(Liste);
+    //     printf("Temps : %f\n",t);
+    // }
 
 
 
@@ -148,7 +172,7 @@ int main () {
     // }
     // afficher(&P1);
     // afficher(&P2);
-    printf("%f : %f : %f",modulo(0.4),modulo(234),modulo(-654.3));
+    // printf("%f : %f : %f",modulo(0.4),modulo(234),modulo(-654.3));
 
     return 0;
 }
