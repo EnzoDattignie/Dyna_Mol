@@ -3,21 +3,28 @@
 #include <math.h>
 #include <time.h>
 
+static char nom_fichier[] = "Mesure1e1.txt";
+
+const double t_star = 1;
+const double n_pas = 10;
+static double dt = t_star/n_pas;
+
+// static double dt = 0.001;
+
 double sigma = 1;
 double epsilon = 1;
-#define M 1;
-static double dt = 0.01;
+static double M = 1;
 static double L = 3;
 const int n = 3;
-static int N = n*n;
-// static int N = 2;
+static int N = 15;
+static double dl = 0.9;
 static double T = 1;
-static double t_max = 100;
+static double t_max = 10;
 
 int main () {
     FILE *fichier;
-    fichier = fopen("Mesure.txt","w");
-    fprintf(fichier,"Temps;Energie\n");
+    fichier = fopen(nom_fichier,"w");
+    fprintf(fichier,"dt = %f\nTemps;Energie\n",dt);
     fclose(fichier);
     srand(time(0));
     struct Part {
@@ -53,7 +60,7 @@ int main () {
 
     double rng() {
         double rd = rand();
-        rd = (rd/RAND_MAX - 0.5)*L;
+        rd = (rd/RAND_MAX);
         return rd;
     }
 
@@ -96,6 +103,9 @@ int main () {
 
     int update_u(struct Part Liste[]) {
         for (int i = 0; i < N; i++) {
+            Liste[i].u = 0;
+        }
+        for (int i = 0; i < N; i++) {
             for (int j = i+1; j < N; j++) {
                 fct_u(&Liste[i],&Liste[j]); 
             }
@@ -107,8 +117,8 @@ int main () {
         *E_cin = 0;
         *E_pot = 0;
         for (int i = 0; i < N; i++) {
-            *E_cin = *E_cin+Liste[i].m*(Liste[i].vx*Liste[i].vx + Liste[i].vy*Liste[i].vy);
-            *E_pot = *E_pot+Liste[i].u;
+            *E_cin = *E_cin+0.5*Liste[i].m*(Liste[i].vx*Liste[i].vx + Liste[i].vy*Liste[i].vy);
+            *E_pot = *E_pot+0.5*Liste[i].u;
         }
     }
 
@@ -158,10 +168,10 @@ int main () {
     }
 
     int config_crist(struct Part Liste[]) {
-        double dl = L/(n);
+        double l = L/(n);
         int compteur = 0;
-        double posx = (dl-L)/2;
-        double posy = (dl-L)/2;
+        double posx = (l-L)/2;
+        double posy = (l-L)/2;
         for (int i = 0;i<N;i++) {
             compteur ++;
             constructeur(&Liste[i],posx,posy);
@@ -169,6 +179,23 @@ int main () {
             if (compteur == n) {
                 posy = posy + dl;
                 posx = (dl-L)/2;;
+                compteur = 0;
+            }
+        }
+        return 0;
+    }
+
+    int config_crist2(struct Part Liste[]) {
+        int compteur = 0;
+        double posx = 0;
+        double posy = 0;
+        for (int i = 0;i<N;i++) {
+            compteur ++;
+            constructeur(&Liste[i],posx,posy);
+            posx = posx + dl;
+            if (compteur == n) {
+                posy = posy + dl;
+                posx = 0;
                 compteur = 0;
             }
         }
@@ -186,7 +213,7 @@ int main () {
     
 
     struct Part Liste[N];
-    config_crist(Liste);
+    config_crist2(Liste);
     // constructeur(&Liste[0],0,0);
     // constructeur(&Liste[0],1,1);
 
@@ -196,18 +223,33 @@ int main () {
 
     update_u(Liste);
     somme_E(Liste,&E_cin,&E_pot);
-    printf("Energie initiale %f\n",E_cin+E_pot);
-    fichier = fopen("Mesure.txt","a");
+
+    // double dE = (E-(E_cin+E_pot))/N;
+    // double dv = sqrt(dE/M);
+    // for (int i = 0; i < N;i++) {
+    //     double theta = rng()*2*M_PI;
+    //     Liste[i].vx = Liste[i].vx+dv*cos(theta);
+    //     Liste[i].vy = Liste[i].vx+dv*sin(theta);
+    // }
+
+
+    printf("Energie initiale %f\nE_cin = %f : E_pot = %f\n",E_cin+E_pot,E_cin, E_pot);
+    fichier = fopen(nom_fichier,"a");
+    fprintf(fichier,"%f;%f\n",0.0,E_cin+E_pot);
+    double compteur = 0;
     for (double t = 0; t < t_max;t=t+dt) {
         Force_liste(Liste);
         // for (int i = 0; i < N;i++) {
         //     afficher(&Liste[i]);
         // }
-        update_Liste(Liste);
         update_u(Liste);
         somme_E(Liste,&E_cin,&E_pot);
-        fprintf(fichier,"%f;%f\n",t,E_cin+E_pot);
-
+        update_Liste(Liste);
+        if (compteur >= 0.1-0.5*dt) {
+            fprintf(fichier,"%f;%f\n",t,E_cin+E_pot);
+            compteur = 0;
+        }
+        compteur = compteur + dt;
         if (fabs(modulo2(t,1)-0.1)<0.1*dt) {
         printf("Temps : %f; Energie : %f\n",t,E_cin+E_pot);
         }
