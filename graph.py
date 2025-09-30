@@ -122,15 +122,6 @@ for i in range (0,len(Liste_dt)-1):
 ln_dt = np.log(Liste_dt)
 ln_dE = np.log(Liste_dE)
 
-# x = np.linspace(-14,0,50)
-# alpha = (ln_dE1[int(len(ln_dE1)/2)+2]-ln_dE1[int(len(ln_dE1)/2)-2])/(ln_dt1[int(len(ln_dE1)/2)+2]-ln_dt1[int(len(ln_dE1)/2)-2])
-# b1 = ln_dE1[int(len(ln_dE1)/2)]-alpha*ln_dt1[int(len(ln_dE1)/2)]
-# y1 = alpha1*x+b1
-# alpha = (ln_dE[int(len(ln_dE)/2)+2]-ln_dE[int(len(ln_dE)/2)-2])/(ln_dt[int(len(ln_dE)/2)+2]-ln_dt1[int(len(ln_dE)/2)-2])
-# b = ln_dE[int(len(ln_dE)/2)]-alpha*ln_dt[int(len(ln_dE)/2)]
-# y = alpha*x+b
-
-
 # print(f"Fit de la forme {alpha}*x + {b}")
 data1, = plt.plot(ln_dt1,ln_dE1,'o',label="Verlet")
 data2, = plt.plot(ln_dt,ln_dE,'o',label="Euler")
@@ -138,7 +129,15 @@ plt.title("Graphique représentant la différence dE en fonction de dt")
 plt.xlabel("ln(dt)")
 plt.ylabel("ln(dE)")
 plt.legend()
+
+
+# x = np.linspace(-14,0,50)
+# alpha = (ln_dE[int(len(ln_dE1)/2)+2]-ln_dE[int(len(ln_dE)/2)-2])/(ln_dt[int(len(ln_dE)/2)+2]-ln_dt[int(len(ln_dE)/2)-2])
+# b = ln_dE[int(len(ln_dE)/2)]-alpha*ln_dt[int(len(ln_dE)/2)]
+# y = alpha*x+b
 # plt.plot(x,y)
+
+
 plt.show()
 
 # for file in files :
