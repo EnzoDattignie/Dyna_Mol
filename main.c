@@ -4,10 +4,10 @@
 #include <time.h>
 
 
-static char nom_fichier[] = "./Euler2/Euler2e1.txt";
+static char nom_fichier[] = "./temp.txt";
 
-const double t_star = 0.1;
-const double n_pas = 2e1  ;
+const double t_star = 1;
+const double n_pas = 1e6  ;
 static double dt = t_star/n_pas;
 
 // static double dt = 0.001;
@@ -20,7 +20,7 @@ const int n = 3;
 static int N = 15;
 static double dl = 0.70 ;
 static double T = 1;
-static double t_max = 0.5;
+static double t_max = 10;
 
 int main () {
     FILE *fichier;
@@ -128,19 +128,14 @@ int main () {
     int Force(struct Part *P1, struct Part *P2) {
         double dx = P2->x-P1->x;
         double dy = P2->y-P1->y;
-        double r = sqrt(dx*dx + dy*dy);
-    
-            int Force_r(double* Fr, double r) {
-                *Fr = 24*epsilon*(2*pow(sigma/r,12)/r - pow(sigma/r,6)/r);
-                return 0;
-            }
-    
-        double Fr = 0;
-        Force_r(&Fr,r);
+        double r2i = 1/(dx*dx + dy*dy);
+        double r6i = r2i*r2i*r2i;
+        double r12i = r6i*r6i;
+        double Fr = 24*epsilon*(2*r12i - r6i)*r2i;
         // printf("F_r : %f\n",Fr);
         
-        double Fx = Fr * dx/r;
-        double Fy = Fr * dy/r;
+        double Fx = Fr * dx;
+        double Fy = Fr * dy;
     
         P1->ax = P1->ax - Fx;
         P1->ay = P1->ay - Fy;
@@ -261,12 +256,12 @@ int main () {
     double compteur = 0;
     Force_liste(Liste);
     for (double t = 0; t < t_max;t=t+dt) {
-        update_u(Liste);
-        somme_E(Liste,&E_cin,&E_pot);
-        Euler_Liste(Liste);
-        Force_liste(Liste);
-        // Verlet_Liste(Liste,&E_cin,&E_pot);
-        if (compteur >= 0.01-0.5*dt) {
+        // update_u(Liste);
+        // somme_E(Liste,&E_cin,&E_pot);
+        // Euler_Liste(Liste);
+        // Force_liste(Liste);
+        Verlet_Liste(Liste,&E_cin,&E_pot);
+        if (compteur >= t_max/20-0.5*dt) {
             fprintf(fichier,"%f;%f\n",t,E_cin+E_pot);
             printf("Temps : %f; Energie : %f\n",t,E_cin+E_pot);
             compteur = 0;
