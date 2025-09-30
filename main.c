@@ -3,10 +3,11 @@
 #include <math.h>
 #include <time.h>
 
-static char nom_fichier[] = "Mesure1e1.txt";
 
-const double t_star = 1;
-const double n_pas = 10;
+static char nom_fichier[] = "./Euler2/Euler2e1.txt";
+
+const double t_star = 0.1;
+const double n_pas = 2e1  ;
 static double dt = t_star/n_pas;
 
 // static double dt = 0.001;
@@ -17,9 +18,9 @@ static double M = 1;
 static double L = 3;
 const int n = 3;
 static int N = 15;
-static double dl = 0.9;
+static double dl = 0.70 ;
 static double T = 1;
-static double t_max = 10;
+static double t_max = 0.5;
 
 int main () {
     FILE *fichier;
@@ -78,7 +79,7 @@ int main () {
         return res;
     }
 
-    int update(struct Part *P) {
+    int Euler(struct Part *P) {
         P->vx = P->vx + P->ax * dt;
         P->vy = P->vy + P->ay * dt;
         P->x = P->x + P->vx * dt;
@@ -160,9 +161,30 @@ int main () {
         return 0;
     }
 
-    int update_Liste(struct Part Liste[]) {
+    int Euler_Liste(struct Part Liste[]) {
         for (int i = 0;i<N;i++) {
-            update(&Liste[i]);
+            Euler(&Liste[i]);
+        }
+        return 0;
+    }
+
+    int Verlet_Liste(struct Part Liste[],double *E_cin, double *E_pot) {
+        double old_ax[N];
+        double old_ay[N];
+        update_u(Liste);
+        somme_E(Liste,E_cin,E_pot);
+        for (int i = 0; i<N;i++) {
+            Liste[i].x = Liste[i].x + Liste[i].vx*dt + 0.5*Liste[i].ax*dt*dt;
+            Liste[i].y = Liste[i].y + Liste[i].vy*dt + 0.5*Liste[i].ay*dt*dt;
+            old_ax[i] = Liste[i].ax;
+            old_ay[i] = Liste[i].ay;
+            Liste[i].ax = 0;
+            Liste[i].ay = 0;
+        }
+        Force_liste(Liste);
+        for (int i = 0; i<N;i++) {
+            Liste[i].vx = Liste[i].vx + 0.5*(Liste[i].ax+old_ax[i])*dt;
+            Liste[i].vy = Liste[i].vy + 0.5*(Liste[i].ay+old_ay[i])*dt;
         }
         return 0;
     }
@@ -237,22 +259,19 @@ int main () {
     fichier = fopen(nom_fichier,"a");
     fprintf(fichier,"%f;%f\n",0.0,E_cin+E_pot);
     double compteur = 0;
+    Force_liste(Liste);
     for (double t = 0; t < t_max;t=t+dt) {
-        Force_liste(Liste);
-        // for (int i = 0; i < N;i++) {
-        //     afficher(&Liste[i]);
-        // }
         update_u(Liste);
         somme_E(Liste,&E_cin,&E_pot);
-        update_Liste(Liste);
-        if (compteur >= 0.1-0.5*dt) {
+        Euler_Liste(Liste);
+        Force_liste(Liste);
+        // Verlet_Liste(Liste,&E_cin,&E_pot);
+        if (compteur >= 0.01-0.5*dt) {
             fprintf(fichier,"%f;%f\n",t,E_cin+E_pot);
+            printf("Temps : %f; Energie : %f\n",t,E_cin+E_pot);
             compteur = 0;
         }
         compteur = compteur + dt;
-        if (fabs(modulo2(t,1)-0.1)<0.1*dt) {
-        printf("Temps : %f; Energie : %f\n",t,E_cin+E_pot);
-        }
         
     }
     fclose(fichier);
