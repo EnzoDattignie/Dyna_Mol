@@ -21,11 +21,14 @@ static int n = sqrt(N);
 
 static double L = 3;
 
-static double dl = 0.70 ;
+static double dl = 0.4 ;
 // static double dl = (n+1)/L //Ne marche que si N est un carré
 
 
-int main () {
+int main (int argc, char *argv[]) {
+    if (argc == 3) {
+        int var_n_pas = argv[1];
+    }
     // ==== Initialisation ==== //
     FILE *fichier;
     fichier = fopen(nom_fichier,"w");

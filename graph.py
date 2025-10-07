@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 direc = "./Verlet2"
 files = os.listdir(direc)
 samples = 51
-n_star = 10
+n_star = 1
 
 
 t = np.zeros(samples)
@@ -59,8 +59,8 @@ for i in range (0,len(Liste_dt)-1):
             Liste_dt[i] = temp
             Liste_dE[i] = temp2
 
-ln_dt1 = np.log(Liste_dt)
-ln_dE1 = np.log(Liste_dE)
+ln_dt1 = np.log10(Liste_dt)
+ln_dE1 = np.log10(Liste_dE)
 
 direc = "./Euler2"
 files = os.listdir(direc)
@@ -119,8 +119,8 @@ for i in range (0,len(Liste_dt)-1):
             Liste_dt[i] = temp
             Liste_dE[i] = temp2
 
-ln_dt = np.log(Liste_dt)
-ln_dE = np.log(Liste_dE)
+ln_dt = np.log10(Liste_dt)
+ln_dE = np.log10(Liste_dE)
 
 # print(f"Fit de la forme {alpha}*x + {b}")
 data1, = plt.plot(ln_dt1,ln_dE1,'o',label="Verlet")
