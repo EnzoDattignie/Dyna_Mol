@@ -7,5 +7,7 @@ int main (int argc, char *argv[]) {
     double val;
     sscanf(argv[1],"%lf",&val);
     printf("val = %lf",val);
-
+    int mode;
+    sscanf(argv[2],"%d",&mode);
+printf("val = %d",mode);
 }

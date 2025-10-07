@@ -9,11 +9,10 @@
 double sigma = 1;
 double epsilon = 1;
 
-static char nom_fichier[] = "./temp.txt"; //Nom du fichier d'enregistrement
+char nom_fichier[] = "./temp.txt"; //Nom du fichier d'enregistrement
 
-const double t_star = 1; 
-const double n_pas = 1e6  ;
-static double dt = t_star/n_pas;
+double t_star_defaut = 1; 
+double n_pas_defaut = 1e4;
 static double t_max = 10;
 
 static double M = 1;
@@ -26,9 +25,21 @@ static double dl = 0.4 ;
 
 
 int main (int argc, char *argv[]) {
-    if (argc == 3) {
-        int var_n_pas = argv[1];
+    double val;
+    int mode;
+    int t_val;
+    if (argc == 4) {
+        sscanf(argv[1],"%lf",&val);
+        sscanf(argv[2],"%d",&mode);
+        sscanf(argv[3],"%d",&t_val);
+    } else {
+        val = n_pas_defaut;
+        mode = 1;
+        t_val = t_star_defaut;
     }
+    const double n_pas = val;
+    const double t_star = t_val;
+    const double dt = t_star/n_pas;
     // ==== Initialisation ==== //
     FILE *fichier;
     fichier = fopen(nom_fichier,"w");
@@ -239,13 +250,20 @@ int main (int argc, char *argv[]) {
     double compteur = 0;
     double compteur2 = 0;
     for (double t = 0; t < t_max;t=t+dt) {
-        // Euler_step(Liste,&E_cin,&E_pot);
-        Verlet_step(Liste,&E_cin,&E_pot);
+        // printf("Mode : %d",mode);
+        if (mode == 0) {
+            Euler_step(Liste,&E_cin,&E_pot);
+            // printf("Euler");
+        } else {
+            // printf("Verlet");
+            Verlet_step(Liste,&E_cin,&E_pot);
+        }
+        // printf("Temps : %f; Energie : %f\n",t,E_cin+E_pot);
         if (compteur >= t_max/20-0.5*dt) { //Permet d'afficher 20 valeurs
             printf("Temps : %f; Energie : %f\n",t,E_cin+E_pot);
             compteur = 0;
         }
-        if (compteur2 >= t_max/1000-0.5*dt) { //Permet d'enregistrer 1000 valeurs
+        if (compteur2 >= t_max/10000-0.5*dt) { //Permet d'enregistrer 1000 valeurs
             fprintf(fichier,"%f;%f\n",t,E_cin+E_pot);
             compteur2 = 0;
         }
