@@ -5,14 +5,14 @@
 
 // ==== Initialisation des constantes ==== //
 
-#define N (15) //Nombre total de particule
+#define N (2) //Nombre total de particule
 double sigma = 1;
 double epsilon = 1;
 
 char nom_fichier[] = "./temp.txt"; //Nom du fichier d'enregistrement
 
 double t_star_defaut = 1; 
-double n_pas_defaut = 1e4;
+double n_pas_defaut = 1e6;
 static double t_max = 10;
 
 static double M = 1;
