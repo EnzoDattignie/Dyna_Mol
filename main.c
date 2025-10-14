@@ -5,24 +5,26 @@
 
 // ==== Initialisation des constantes ==== //
 
-#define N (20) //Nombre total de particule
+
+#define N (4) //Nombre total de particule
 double sigma = 1;
 double epsilon = 1;
 
 char nom_fichier[] = "./temp.txt"; //Nom du fichier d'enregistrement
 
 double t_star_defaut = 1; 
-double n_pas_defaut = 5e5;
-static double t_max = 0.5;
+double n_pas_defaut = 1e6;
+static double t_max = 10;
 
 static double M = 1;
-static int n = sqrt(N);
+static const double n = sqrt(N);
 
-static double L = 3;
 
-static double dl = 0.8 ;
-// static double dl = (n+1)/L //Ne marche que si N est un carré
+static const double L = 1.5;
 
+// static double dl = 0.4 ;
+static const double dl = L/n; //Ne marche que si N est un carré
+static const double Rc = 2.5;
 
 int main (int argc, char *argv[]) {
     double val;
@@ -34,7 +36,7 @@ int main (int argc, char *argv[]) {
         sscanf(argv[3],"%lf",&t_val);
     } else {
         val = n_pas_defaut;
-        mode = 1;
+        mode = 0;
         t_val = t_star_defaut;
     }
     const double n_pas = val;
@@ -85,29 +87,55 @@ int main (int argc, char *argv[]) {
         return rd;
     }
 
-    double modulo(double x,double y){
-        double res = x;
-        if (res>L/2) {
-            long div = (long) (res+L/2)/L;
-            res = res-L*(double) div;
-            // printf("%f : %li : %f\n",res,div,x);
-        } if (res<-L/2) {
-            long div = (long) (-res+L/2)/L;
-            res = res+L*(double) div;
-            // printf("%f : %li : %f\n",res,div,x);
-        }
-        return res;
+  
+double modulo(double x){
+    double res = x;
+    if (res > L/2.0) {
+        long div = (long) ((res + L/2.0) / L);
+        res = res - L * (double) div;
+    } 
+    if (res < -L/2.0) {
+        long div = (long) ((-res + L/2.0) / L);
+        res = res + L * (double) div;
     }
+    return res;
+}
 
     int fct_u(struct Part *P1, struct Part *P2) {
-        double dx = P2->x-P1->x;
-        double dy = P2->y-P1->y;
-        double r2 = sigma*sigma/(dx*dx + dy*dy);
-        double r6 = r2*r2*r2;
+        double x1 = P1->x;
+        double x2 = P2->x;
+        double y1 = P1->y;
+        double y2 = P2->y;
+        double dx = x2-x1;
+        double dy = y2-y1;
+        double r2 = (dx*dx + dy*dy);
+        if (r2 > Rc*Rc) {
+            if (x2-x1 > L/2) {
+                x2 = x2 - L;
+            } else {
+                if (x2-x1 < -L/2) {
+                    x2 = x2 + L;
+                }
+            }
+            if (y2-y1 > L/2) {
+                y2 = y2 - L;
+            } else {
+                if (y2-y1 < -L/2) {
+                    y2 = y2 + L;
+                }
+            }
+            dx = x2-x1;
+            dy = y2-y1;
+            r2 = (dx*dx + dy*dy);
+        }
+        if (r2 < Rc*Rc) {
+        double r2i = 1/r2;
+        double r6 = r2i*r2i*r2i;
         double r12 = r6*r6;
         double val_u = 4*(r12-r6);
         P1->u = P1->u + val_u;
         P2->u = P2->u + val_u;
+        }
         return 0;
     }
 
@@ -135,21 +163,47 @@ int main (int argc, char *argv[]) {
 
 
     int Force(struct Part *P1, struct Part *P2) {
-        double dx = P2->x-P1->x;
-        double dy = P2->y-P1->y;
-        double r2i = 1/(dx*dx + dy*dy);
-        double r6i = r2i*r2i*r2i;
-        double r12i = r6i*r6i;
-        double Fr = 24*epsilon*(2*r12i - r6i)*r2i;
-        // printf("F_r : %f\n",Fr);
+        double x1 = P1->x;
+        double x2 = P2->x;
+        double y1 = P1->y;
+        double y2 = P2->y;
+        double dx = x2-x1;
+        double dy = y2-y1;
+        double r2 = (dx*dx + dy*dy);
+        if (r2 > Rc*Rc) {
+            if (x2-x1 > L/2) {
+                x2 = x2 - L;
+            } else {
+                if (x2-x1 < -L/2) {
+                    x2 = x2 + L;
+                }
+            }
+            if (y2-y1 > L/2) {
+                y2 = y2 - L;
+            } else {
+                if (y2-y1 < -L/2) {
+                    y2 = y2 + L;
+                }
+            }
+            dx = x2-x1;
+            dy = y2-y1;
+            r2 = (dx*dx + dy*dy);
+        }
+        if (r2 < Rc*Rc) {
+            double r2i = 1/r2;
+            double r6i = r2i*r2i*r2i;
+            double r12i = r6i*r6i;
+            double Fr = 24*epsilon*(2*r12i - r6i)*r2i;
+            // printf("F_r : %f\n",Fr);
+            
+            double Fx = Fr * dx;
+            double Fy = Fr * dy;
         
-        double Fx = Fr * dx;
-        double Fy = Fr * dy;
-    
-        P1->ax = P1->ax - Fx;
-        P1->ay = P1->ay - Fy;
-        P2->ax = P2->ax + Fx;
-        P2->ay = P2->ay + Fy;
+            P1->ax = P1->ax - Fx;
+            P1->ay = P1->ay - Fy;
+            P2->ax = P2->ax + Fx;
+            P2->ay = P2->ay + Fy;
+        }
         return 0;
     
         }
@@ -174,6 +228,12 @@ int main (int argc, char *argv[]) {
             Liste[i].vy = Liste[i].vy + Liste[i].ay * dt;
             Liste[i].x = Liste[i].x + Liste[i].vx * dt;
             Liste[i].y = Liste[i].y + Liste[i].vy * dt;
+            if (Liste[i].x*Liste[i].x > L*L*0.25) {
+                Liste[i].x = modulo(Liste[i].x);
+            }
+            if (Liste[i].y*Liste[i].y > L*L*0.25) {
+                Liste[i].y = modulo(Liste[i].y);
+            }
             Liste[i].ax = 0;
             Liste[i].ay = 0;
         }
@@ -188,7 +248,13 @@ int main (int argc, char *argv[]) {
         somme_E(Liste,E_cin,E_pot);
         for (int i = 0; i<N;i++) {
             Liste[i].x = Liste[i].x + Liste[i].vx*dt + 0.5*Liste[i].ax*dt*dt;
+            if (Liste[i].x*Liste[i].x > L*L*0.25) {
+                Liste[i].x = modulo(Liste[i].x);
+            }
             Liste[i].y = Liste[i].y + Liste[i].vy*dt + 0.5*Liste[i].ay*dt*dt;
+            if (Liste[i].y*Liste[i].y > L*L*0.25) {
+                Liste[i].y = modulo(Liste[i].y);
+            }
             old_ax[i] = Liste[i].ax;
             old_ay[i] = Liste[i].ay;
             Liste[i].ax = 0;
@@ -212,7 +278,7 @@ int main (int argc, char *argv[]) {
             compteur ++;
             constructeur(&Liste[i],posx,posy);
             posx = posx + dl;
-            if (compteur == n) {
+            if (compteur == (int)n) {
                 posy = posy + dl;
                 posx = origin;
                 compteur = 0;
@@ -236,9 +302,9 @@ int main (int argc, char *argv[]) {
     struct Part Liste[N];
     config_crist(Liste);
 
-    // for (int i = 0; i < N;i++) { // config random
-    //     constructeur(&Liste[i],rng(),rng());
-    // }
+    for (int i = 0; i < N;i++) { // config random
+        afficher(&Liste[i]);
+    }
     Force_liste(Liste);
     update_u(Liste);
     somme_E(Liste,&E_cin,&E_pot);
@@ -262,6 +328,9 @@ int main (int argc, char *argv[]) {
         // printf("Temps : %f; Energie : %f\n",t,E_cin+E_pot);
         if (compteur >= t_max/20-0.5*dt) { //Permet d'afficher 20 valeurs
             printf("Temps : %f; Energie : %f\n",t,E_cin+E_pot);
+    //          for (int i = 0; i < N;i++) {
+    //     afficher(&Liste[i]);
+    // }
             compteur = 0;
         }
         if (compteur2 >= t_max/10000-0.5*dt) { //Permet d'enregistrer 1000 valeurs
