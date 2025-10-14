@@ -5,7 +5,7 @@
 
 // ==== Initialisation des constantes ==== //
 
-#define N (2) //Nombre total de particule
+#define N (20) //Nombre total de particule
 double sigma = 1;
 double epsilon = 1;
 
@@ -13,25 +13,25 @@ char nom_fichier[] = "./temp.txt"; //Nom du fichier d'enregistrement
 
 double t_star_defaut = 1; 
 double n_pas_defaut = 5e5;
-static double t_max = 10;
+static double t_max = 0.5;
 
 static double M = 1;
 static int n = sqrt(N);
 
 static double L = 3;
 
-static double dl = 0.4 ;
+static double dl = 0.8 ;
 // static double dl = (n+1)/L //Ne marche que si N est un carré
 
 
 int main (int argc, char *argv[]) {
     double val;
     int mode;
-    int t_val;
+    double t_val;
     if (argc == 4) {
         sscanf(argv[1],"%lf",&val);
         sscanf(argv[2],"%d",&mode);
-        sscanf(argv[3],"%d",&t_val);
+        sscanf(argv[3],"%lf",&t_val);
     } else {
         val = n_pas_defaut;
         mode = 1;
@@ -166,7 +166,7 @@ int main (int argc, char *argv[]) {
     }
 
     int Euler_step(struct Part Liste[],double *E_cin, double *E_pot) {
-        printf("AAAA");
+        // printf("AAAA");
         update_u(Liste);
         somme_E(Liste,E_cin,E_pot);
         for (int i = 0;i<N;i++) {
@@ -242,7 +242,7 @@ int main (int argc, char *argv[]) {
     Force_liste(Liste);
     update_u(Liste);
     somme_E(Liste,&E_cin,&E_pot);
-    printf("Energie initiale %f\nE_cin = %f : E_pot = %f\n",E_cin+E_pot,E_cin, E_pot);
+    printf("Dt : %f, Energie initiale %f\nE_cin = %f : E_pot = %f\n",dt,E_cin+E_pot,E_cin, E_pot);
 
     fichier = fopen(nom_fichier,"a");
     fprintf(fichier,"%f;%f\n",0.0,E_cin+E_pot);
