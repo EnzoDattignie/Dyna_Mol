@@ -12,7 +12,7 @@ double epsilon = 1;
 char nom_fichier[] = "./temp.txt"; //Nom du fichier d'enregistrement
 
 double t_star_defaut = 1; 
-double n_pas_defaut = 1e6;
+double n_pas_defaut = 5e5;
 static double t_max = 10;
 
 static double M = 1;
@@ -166,6 +166,7 @@ int main (int argc, char *argv[]) {
     }
 
     int Euler_step(struct Part Liste[],double *E_cin, double *E_pot) {
+        printf("AAAA");
         update_u(Liste);
         somme_E(Liste,E_cin,E_pot);
         for (int i = 0;i<N;i++) {
