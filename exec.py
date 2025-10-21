@@ -5,11 +5,16 @@ import os
 
 
 times = []
-for i in range(2,5):
+for i in range(0,6):
     for j in range(1,9):
         times.append(str(j)+"e"+str(i))
 modes = ["0","1"] #0 = Euler, 1 = Verlet
-t_star = "0.0160"
+t_star = "0.01"
+
+i_min = -10
+i_max = -3
+i_mine = 2
+i_maxe = 12
 
 samples = int(1e5)
 for mode in modes :
@@ -41,7 +46,7 @@ for mode in modes :
                 if (t[i] == float(t_star)) :
                     ln_dE.append(np.log(abs(E[i])))
                     ln_dt.append(np.log(float(dt)))
-                    print(f"dE = {E[i]}, dt = {dt}")
+                    # print(f"dE = {E[i]}, dt = {dt}")
             t = t[:compteur]
             plt.plot(t,E)  
             dic[dt]=E
@@ -62,10 +67,10 @@ for mode in modes :
         plt.plot(temp1,temp2,"o",label="Euler")
         plt.plot(new_dt,new_dE,"o",label="Verlet")
 
-a_euler = (temp2[12]-temp2[4])/(temp1[12]-temp1[4])
-a_verlet = (new_dE[12]-new_dE[8])/(new_dt[12]-new_dt[8])
-b_euler = temp2[4]-a_euler*temp1[4  ]
-b_verlet = new_dE[8]-a_verlet*new_dt[8]
+a_euler = (temp2[i_maxe]-temp2[i_mine])/(temp1[i_maxe]-temp1[i_mine])
+a_verlet = (new_dE[i_max]-new_dE[i_min])/(new_dt[i_max]-new_dt[i_min])
+b_euler = temp2[i_maxe]-a_euler*temp1[i_maxe]
+b_verlet = new_dE[i_max]-a_verlet*new_dt[i_max]
 
 dt_copy = np.copy(new_dt)
 droite_euler = a_euler*dt_copy+b_euler
@@ -74,8 +79,8 @@ droite_verlet = a_verlet*dt_copy+b_verlet
 
 print(f"a_euler = {a_euler}, a_verlet = {a_verlet}")
 
-plt.plot(dt_copy,droite_euler)
-plt.plot(dt_copy,droite_verlet)
+plt.plot(dt_copy,droite_euler,"-b")
+plt.plot(dt_copy,droite_verlet,"-r")
 
 
 plt.legend()

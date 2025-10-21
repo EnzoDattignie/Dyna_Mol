@@ -6,15 +6,18 @@
 // ==== Initialisation des constantes ==== //
 
 
+int const seed = 220;
+
 #define N (4) //Nombre total de particule
 double sigma = 1;
 double epsilon = 1;
+double seuil = 0.8;
 
 char nom_fichier[] = "./temp.txt"; //Nom du fichier d'enregistrement
 
 double t_star_defaut = 1; 
 double n_pas_defaut = 1e5;
-static double t_max = 0.05;
+static double t_max = 0.5;
 
 static double M = 1;
 static const double n = sqrt(N);
@@ -27,7 +30,7 @@ static const double dl = L/n; //Ne marche que si N est un carré
 static const double Rc = 2.5;
 
 int main (int argc, char *argv[]) {
-    srand(1);
+    srand(seed);
     double val;
     int mode;
     double t_val;
@@ -48,7 +51,6 @@ int main (int argc, char *argv[]) {
     fichier = fopen(nom_fichier,"w");
     fprintf(fichier,"dt = %.12f\nTemps;Energie\n",dt);
     fclose(fichier);
-    srand(time(0));
 
     // ==== Fonctions ==== //
     struct Part {
@@ -293,11 +295,16 @@ double modulo(double x){
         double posy;
         double rdm1;
         double rdm2;
+        int flag;
         for (int i = 0;i<N;i++) {
+            flag = 0;
             rdm1 = (double)rand();
             rdm2 = (double)rand();
             posx = (rdm1/RAND_MAX - 0.5)*L;
             posy = (rdm2/RAND_MAX - 0.5)*L;
+            for (int j = 0;j<i;i++) {
+                
+            }
             constructeur(&Liste[i],posx,posy);          
     }}
 
@@ -309,15 +316,15 @@ double modulo(double x){
     
 
     struct Part Liste[N];
-    // config_rdm(Liste);
-    constructeur(&Liste[0],-0.879013,0.495180);
-    constructeur(&Liste[1],1.789280,-0.639103);
-    constructeur(&Liste[2],-1.984904,-1.381889);
-    constructeur(&Liste[3],1.565183,-0.247625);
+    config_rdm(Liste);
+    // constructeur(&Liste[0],-0.879013,0.495180);
+    // constructeur(&Liste[1],1.789280,-0.639103);
+    // constructeur(&Liste[2],-1.984904,-1.381889);
+    // constructeur(&Liste[3],1.565183,-0.247625);
 
-    // for (int i = 0; i < N;i++) { // config random
-    //     afficher(&Liste[i]);
-    // }
+    for (int i = 0; i < N;i++) { 
+        afficher(&Liste[i]);
+    }
     Force_liste(Liste);
     update_u(Liste);
     somme_E(Liste,&E_cin,&E_pot);
@@ -340,13 +347,13 @@ double modulo(double x){
         }
         // printf("Temps : %f; Energie : %f\n",t,E_cin+E_pot);
         if (compteur >= t_max/20-0.5*dt) { //Permet d'afficher 20 valeurs
-            // printf("Temps : %f; Energie : %f\n",t,E_cin+E_pot);
+            printf("Temps : %f; Energie : %f\n",t,E_cin+E_pot);
     //          for (int i = 0; i < N;i++) {
     //     afficher(&Liste[i]);
     // }
             compteur = 0;
         }
-        if (compteur2 >= t_max/10000-0.5*dt) { //Permet d'enregistrer 1000 valeurs
+        if (compteur2 >= t_max/10000-0.5*dt) { //Permet d'enregistrer 10000 valeurs
             fprintf(fichier,"%f;%f\n",t,E_cin+E_pot);
             compteur2 = 0;
         }
