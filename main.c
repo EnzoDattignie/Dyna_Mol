@@ -2,13 +2,15 @@
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
+#include <string.h>
 
 // ==== Initialisation des constantes ==== //
 
 
-#define N (4) //Nombre total de particule
+#define N (2) //Nombre total de particule
 double sigma = 1;
 double epsilon = 1;
+double kb = 1.380649e-23;
 
 char nom_fichier[] = "./temp.txt"; //Nom du fichier d'enregistrement
 
@@ -20,7 +22,7 @@ static double M = 1;
 static const double n = sqrt(N);
 
 
-static const double L = 4;
+static const double L = 26;
 
 // static double dl = 0.4 ;
 static const double dl = L/n; //Ne marche que si N est un carré
@@ -46,9 +48,8 @@ int main (int argc, char *argv[]) {
     // ==== Initialisation ==== //
     FILE *fichier;
     fichier = fopen(nom_fichier,"w");
-    fprintf(fichier,"dt = %.12f\nTemps;Energie\n",dt);
+    fprintf(fichier,"dt = %.12f\nTemps;Energie(\u03b5);T(\u03b5/kb)\n",dt);
     fclose(fichier);
-    srand(time(0));
 
     // ==== Fonctions ==== //
     struct Part {
@@ -311,9 +312,9 @@ double modulo(double x){
     struct Part Liste[N];
     // config_rdm(Liste);
     constructeur(&Liste[0],-0.879013,0.495180);
-    constructeur(&Liste[1],1.789280,-0.639103);
-    constructeur(&Liste[2],-1.984904,-1.381889);
-    constructeur(&Liste[3],1.565183,-0.247625);
+    constructeur(&Liste[1],-0.8,-0.139103);
+    // constructeur(&Liste[2],-1.984904,-1.381889);
+    // constructeur(&Liste[3],1.565183,-0.247625);
 
     // for (int i = 0; i < N;i++) { // config random
     //     afficher(&Liste[i]);
@@ -324,11 +325,14 @@ double modulo(double x){
     printf("Dt : %f, Energie initiale %f\nE_cin = %f : E_pot = %f\n",dt,E_cin+E_pot,E_cin, E_pot);
 
     fichier = fopen(nom_fichier,"a");
-    fprintf(fichier,"%f;%f\n",0.0,E_cin+E_pot);
+    // fprintf(fichier,"%f;%f\n",0.0,E_cin+E_pot);
     
     // ==== Boucle d'itération principale ==== //
     double compteur = 0;
     double compteur2 = 0;
+    double T;
+    printf("Temps; Energie(\u03b5); Temperature(\u03b5/kb)\n");
+    printf("%f; %f; %f\n",0.,E_cin+E_pot,0.);
     for (double t = 0; t < t_max;t=t+dt) {
         // printf("Mode : %d",mode);
         if (mode == 0) {
@@ -338,16 +342,17 @@ double modulo(double x){
             // printf("Verlet");
             Verlet_step(Liste,&E_cin,&E_pot);
         }
+        T = E_cin/N;
         // printf("Temps : %f; Energie : %f\n",t,E_cin+E_pot);
         if (compteur >= t_max/20-0.5*dt) { //Permet d'afficher 20 valeurs
-            // printf("Temps : %f; Energie : %f\n",t,E_cin+E_pot);
+            printf("%f; %f; %f\n",t,E_cin+E_pot,T);
     //          for (int i = 0; i < N;i++) {
     //     afficher(&Liste[i]);
     // }
             compteur = 0;
         }
         if (compteur2 >= t_max/10000-0.5*dt) { //Permet d'enregistrer 1000 valeurs
-            fprintf(fichier,"%f;%f\n",t,E_cin+E_pot);
+            fprintf(fichier,"%f;%f;%f\n",t,E_cin+E_pot,E_cin/N);
             compteur2 = 0;
         }
         compteur = compteur + dt;
