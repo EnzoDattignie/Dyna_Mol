@@ -5,6 +5,7 @@
 
 // ==== Initialisation des constantes ==== //
 
+
 #define N (4) //Nombre total de particule
 double sigma = 1;
 double epsilon = 1;
@@ -12,30 +13,31 @@ double epsilon = 1;
 char nom_fichier[] = "./temp.txt"; //Nom du fichier d'enregistrement
 
 double t_star_defaut = 1; 
-double n_pas_defaut = 1e6;
-static double t_max = 10;
+double n_pas_defaut = 1e5;
+static double t_max = 0.05;
 
 static double M = 1;
 static const double n = sqrt(N);
 
 
-static const double L = 1.5;
+static const double L = 4;
 
 // static double dl = 0.4 ;
 static const double dl = L/n; //Ne marche que si N est un carré
 static const double Rc = 2.5;
 
 int main (int argc, char *argv[]) {
+    srand(1);
     double val;
     int mode;
-    int t_val;
+    double t_val;
     if (argc == 4) {
         sscanf(argv[1],"%lf",&val);
         sscanf(argv[2],"%d",&mode);
-        sscanf(argv[3],"%d",&t_val);
+        sscanf(argv[3],"%lf",&t_val);
     } else {
         val = n_pas_defaut;
-        mode = 0;
+        mode = 1;
         t_val = t_star_defaut;
     }
     const double n_pas = val;
@@ -44,7 +46,7 @@ int main (int argc, char *argv[]) {
     // ==== Initialisation ==== //
     FILE *fichier;
     fichier = fopen(nom_fichier,"w");
-    fprintf(fichier,"dt = %f\nTemps;Energie\n",dt);
+    fprintf(fichier,"dt = %.12f\nTemps;Energie\n",dt);
     fclose(fichier);
     srand(time(0));
 
@@ -286,10 +288,18 @@ double modulo(double x){
         return 0;
     }
 
-    double modulo2(double x, double y) {
-        int div = x/y;
-        return x-div*y;
-    }
+    int config_rdm(struct Part Liste[]) {
+        double posx;
+        double posy;
+        double rdm1;
+        double rdm2;
+        for (int i = 0;i<N;i++) {
+            rdm1 = (double)rand();
+            rdm2 = (double)rand();
+            posx = (rdm1/RAND_MAX - 0.5)*L;
+            posy = (rdm2/RAND_MAX - 0.5)*L;
+            constructeur(&Liste[i],posx,posy);          
+    }}
 
 
     // ==== Initialisation du système ==== //
@@ -299,15 +309,19 @@ double modulo(double x){
     
 
     struct Part Liste[N];
-    config_crist(Liste);
+    // config_rdm(Liste);
+    constructeur(&Liste[0],-0.879013,0.495180);
+    constructeur(&Liste[1],1.789280,-0.639103);
+    constructeur(&Liste[2],-1.984904,-1.381889);
+    constructeur(&Liste[3],1.565183,-0.247625);
 
-    for (int i = 0; i < N;i++) { // config random
-        afficher(&Liste[i]);
-    }
+    // for (int i = 0; i < N;i++) { // config random
+    //     afficher(&Liste[i]);
+    // }
     Force_liste(Liste);
     update_u(Liste);
     somme_E(Liste,&E_cin,&E_pot);
-    printf("Energie initiale %f\nE_cin = %f : E_pot = %f\n",E_cin+E_pot,E_cin, E_pot);
+    printf("Dt : %f, Energie initiale %f\nE_cin = %f : E_pot = %f\n",dt,E_cin+E_pot,E_cin, E_pot);
 
     fichier = fopen(nom_fichier,"a");
     fprintf(fichier,"%f;%f\n",0.0,E_cin+E_pot);
@@ -326,7 +340,7 @@ double modulo(double x){
         }
         // printf("Temps : %f; Energie : %f\n",t,E_cin+E_pot);
         if (compteur >= t_max/20-0.5*dt) { //Permet d'afficher 20 valeurs
-            printf("Temps : %f; Energie : %f\n",t,E_cin+E_pot);
+            // printf("Temps : %f; Energie : %f\n",t,E_cin+E_pot);
     //          for (int i = 0; i < N;i++) {
     //     afficher(&Liste[i]);
     // }
