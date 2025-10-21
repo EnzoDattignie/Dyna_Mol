@@ -31,3 +31,4 @@ for mode in modes :
             plt.show()
             dic[dt]=E
      
+    
