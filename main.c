@@ -7,9 +7,9 @@
 // ==== Initialisation des constantes ==== //
 
 
-int const seed = 220;
+int const seed = 2240;
 
-#define N (4) //Nombre total de particule
+#define N (10) //Nombre total de particule
 double sigma = 1;
 double epsilon = 1;
 double seuil = 0.8;
@@ -19,13 +19,13 @@ char nom_fichier[] = "./temp.txt"; //Nom du fichier d'enregistrement
 
 double t_star_defaut = 1; 
 double n_pas_defaut = 1e5;
-static double t_max = 0.5;
+static double t_max = 10;
 
 static double M = 1;
 static const double n = sqrt(N);
 
 
-static const double L = 26;
+static const double L = 6;
 
 // static double dl = 0.4 ;
 static const double dl = L/n; //Ne marche que si N est un carré
@@ -51,7 +51,7 @@ int main (int argc, char *argv[]) {
     // ==== Initialisation ==== //
     FILE *fichier;
     fichier = fopen(nom_fichier,"w");
-    fprintf(fichier,"dt = %.12f\nTemps;Energie(\u03b5);T(\u03b5/kb)\n",dt);
+    fprintf(fichier,"dt = %.12f\nTemps; Energie(\u03b5); E_cin(\u03b5); E_pot(\u03b5); Temperature(\u03b5/kb)\n",dt);
     fclose(fichier);
 
     // ==== Fonctions ==== //
@@ -304,9 +304,7 @@ double modulo(double x){
             rdm2 = (double)rand();
             posx = (rdm1/RAND_MAX - 0.5)*L;
             posy = (rdm2/RAND_MAX - 0.5)*L;
-            for (int j = 0;j<i;i++) {
-                
-            }
+    
             constructeur(&Liste[i],posx,posy);          
     }}
 
@@ -325,23 +323,23 @@ double modulo(double x){
     // constructeur(&Liste[2],-1.984904,-1.381889);
     // constructeur(&Liste[3],1.565183,-0.247625);
 
-    for (int i = 0; i < N;i++) { 
-        afficher(&Liste[i]);
-    }
+    // for (int i = 0; i < N;i++) { 
+    //     afficher(&Liste[i]);
+    // }
     Force_liste(Liste);
     update_u(Liste);
     somme_E(Liste,&E_cin,&E_pot);
     printf("Dt : %f, Energie initiale %f\nE_cin = %f : E_pot = %f\n",dt,E_cin+E_pot,E_cin, E_pot);
 
     fichier = fopen(nom_fichier,"a");
-    // fprintf(fichier,"%f;%f\n",0.0,E_cin+E_pot);
+    fprintf(fichier,"%f;%f;%f;%f;%f\n",0.0,E_cin+E_pot,0.0,E_cin,E_pot);
     
     // ==== Boucle d'itération principale ==== //
     double compteur = 0;
     double compteur2 = 0;
     double T;
-    printf("Temps; Energie(\u03b5); Temperature(\u03b5/kb)\n");
-    printf("%f; %f; %f\n",0.,E_cin+E_pot,0.);
+    printf("Temps; Energie(\u03b5); E_cin(\u03b5); E_pot(\u03b5); Temperature(\u03b5/kb)\n");
+    printf("%f; %f; %f; %f; %f\n",0.,E_cin+E_pot,E_cin,E_pot,0.);
     for (double t = 0; t < t_max;t=t+dt) {
         // printf("Mode : %d",mode);
         if (mode == 0) {
@@ -354,14 +352,14 @@ double modulo(double x){
         T = E_cin/N;
         // printf("Temps : %f; Energie : %f\n",t,E_cin+E_pot);
         if (compteur >= t_max/20-0.5*dt) { //Permet d'afficher 20 valeurs
-            printf("%f; %f; %f\n",t,E_cin+E_pot,T);
+            printf("%f; %f; %f; %f; %f\n",t,E_cin+E_pot,E_cin,E_pot,T);
     //          for (int i = 0; i < N;i++) {
     //     afficher(&Liste[i]);
     // }
             compteur = 0;
         }
         if (compteur2 >= t_max/10000-0.5*dt) { //Permet d'enregistrer 1000 valeurs
-            fprintf(fichier,"%f;%f;%f\n",t,E_cin+E_pot,E_cin/N);
+            fprintf(fichier,"%f; %f; %f; %f; %f\n",t,E_cin+E_pot,E_cin,E_pot,T);
             compteur2 = 0;
         }
         compteur = compteur + dt;
