@@ -51,7 +51,7 @@ int main (int argc, char *argv[]) {
     // ==== Initialisation ==== //
     FILE *fichier;
     fichier = fopen(nom_fichier,"w");
-    fprintf(fichier,"dt = %.12f\nTemps; Energie(\u03b5); E_cin(\u03b5); E_pot(\u03b5); Temperature(\u03b5/kb)\n",dt);
+    fprintf(fichier,"dt = %.12f; N = %d; L(\u03c3) = %f \nTemps; Energie(\u03b5); E_cin(\u03b5); E_pot(\u03b5); Temperature(\u03b5/kb)\n",dt,N,L);
     fclose(fichier);
 
     // ==== Fonctions ==== //
@@ -329,10 +329,10 @@ double modulo(double x){
     Force_liste(Liste);
     update_u(Liste);
     somme_E(Liste,&E_cin,&E_pot);
-    printf("Dt : %f, Energie initiale %f\nE_cin = %f : E_pot = %f\n",dt,E_cin+E_pot,E_cin, E_pot);
+    printf("dt = %f; N = %d; L = %f \u03c3\nEnergie initiale = %f \u03b5 ; E_cin = %f \u03b5 ; E_pot = %f \u03b5\n",dt,N,L,E_cin+E_pot,E_cin, E_pot);
 
     fichier = fopen(nom_fichier,"a");
-    fprintf(fichier,"%f;%f;%f;%f;%f\n",0.0,E_cin+E_pot,0.0,E_cin,E_pot);
+    fprintf(fichier,"%f; %f; %f; %f; %f\n",0.0,E_cin+E_pot,E_cin,E_pot,0.0);
     
     // ==== Boucle d'itération principale ==== //
     double compteur = 0;
