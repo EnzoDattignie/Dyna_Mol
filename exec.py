@@ -31,7 +31,7 @@ for mode in modes :
             t = np.zeros(samples)
             for Line in f :
                 if (compteur==-2):
-                    dt = Line.split("=")[1].strip()
+                    dt = Line.split(";")[0].split("=")[1].strip()
                 if compteur>=0 :
                     # if compteur < 10 :
                         # print(Line.split(";")[1].strip())
