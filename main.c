@@ -10,10 +10,10 @@
 int seed_init = 22;
 
 #define N (10) //Nombre total de particule
-double sigma = 1;
-double epsilon = 1;
-static double seuil = 0.5;
-double kb = 1.380649e-23;
+#define sigma (1)
+#define epsilon (1)
+#define seuil (0.5)
+#define kb (1.380649e-23)
 
 char nom_fichier[] = "./temp.txt"; //Nom du fichier d'enregistrement
 
@@ -22,14 +22,14 @@ double n_pas_defaut = 1e5;
 static double t_max = 0.1;
 
 static double M = 1;
-static const double n = sqrt(N);
+#define n (sqrt(N))
 
 
-static const double L = 8;
+#define L (8.)
 
 // static double dl = 0.4 ;
-static const double dl = L/n; //Ne marche que si N est un carré
-static const double Rc = 2.5;
+#define dl (L/n) //Ne marche que si N est un carré
+#define Rc (2.5)
 
 int nb_part = N;
 
