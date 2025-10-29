@@ -20,6 +20,7 @@ char nom_fichier[] = "./temp.txt"; //Nom du fichier d'enregistrement
 double t_star_defaut = 1; 
 double n_pas_defaut = 1e5;
 static double t_max = 0.1;
+double dt;
 
 static double M = 1;
 #define n (sqrt(N))
@@ -32,28 +33,6 @@ static double M = 1;
 #define Rc (2.5)
 
 int nb_part = N;
-
-int main (int argc, char *argv[]) {
-    double val;
-    int mode;
-    double t_val;
-    if (argc == 4) {
-        sscanf(argv[1],"%lf",&val);
-        sscanf(argv[2],"%d",&mode);
-        sscanf(argv[3],"%lf",&t_val);
-    } else {
-        val = n_pas_defaut;
-        mode = 1;
-        t_val = t_star_defaut;
-        if (argc == 2) {
-            sscanf(argv[1],"%d",&seed_init);
-        }
-    }
-    const int seed = seed_init;
-    const double n_pas = val;
-    const double t_star = t_val;
-    const double dt = t_star/n_pas;
-    srand(seed);
 
     // ==== Fonctions ==== //
     struct Part {
@@ -334,6 +313,28 @@ double modulo(double x){
         }
 }
 
+int main (int argc, char *argv[]) {
+    double val;
+    int mode;
+    double t_val;
+    if (argc == 4) {
+        sscanf(argv[1],"%lf",&val);
+        sscanf(argv[2],"%d",&mode);
+        sscanf(argv[3],"%lf",&t_val);
+    } else {
+        val = n_pas_defaut;
+        mode = 1;
+        t_val = t_star_defaut;
+        if (argc == 2) {
+            sscanf(argv[1],"%d",&seed_init);
+        }
+    }
+    const int seed = seed_init;
+    const double n_pas = val;
+    const double t_star = t_val;
+    dt = t_star/n_pas;
+    srand(seed);
+
 
     // ==== Initialisation du système ==== //
 
@@ -384,16 +385,17 @@ double modulo(double x){
         }
         T = E_cin/nb_part;
         // printf("Temps : %f; Energie : %f\n",t,E_cin+E_pot);
+        
+        if (compteur2 >= t_max/10000-0.5*dt) { //Permet d'enregistrer 1000 valeurs
+            fprintf(fichier,"%f; %f; %f; %f; %f\n",t,E_cin+E_pot,E_cin,E_pot,T);
+            compteur2 = 0;
+        }
         if (compteur >= t_max/20-0.5*dt) { //Permet d'afficher 20 valeurs
             printf("%f; %f; %f; %f; %f\n",t,E_cin+E_pot,E_cin,E_pot,T);
     //          for (int i = 0; i < nb_part;i++) {
     //     afficher(&Liste[i]);
     // }
             compteur = 0;
-        }
-        if (compteur2 >= t_max/10000-0.5*dt) { //Permet d'enregistrer 1000 valeurs
-            fprintf(fichier,"%f; %f; %f; %f; %f\n",t,E_cin+E_pot,E_cin,E_pot,T);
-            compteur2 = 0;
         }
         compteur = compteur + dt;
         compteur2 = compteur2 + dt;
