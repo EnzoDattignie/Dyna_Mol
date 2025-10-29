@@ -19,7 +19,7 @@ char nom_fichier[] = "./temp.txt"; //Nom du fichier d'enregistrement
 
 double t_star_defaut = 1; 
 double n_pas_defaut = 1e5;
-static double t_max = 0.1;
+static double t_max = 10;
 double dt;
 
 static double M = 1;
@@ -67,18 +67,18 @@ int nb_part = N;
     }
 
   
-double modulo(double x){
-    double res = x;
-    if (res > L/2.0) {
-        long div = (long) ((res + L/2.0) / L);
-        res = res - L * (double) div;
-    } 
-    if (res < -L/2.0) {
-        long div = (long) ((-res + L/2.0) / L);
-        res = res + L * (double) div;
+    double modulo(double x){
+        double res = x;
+        if (res > L/2.0) {
+            long div = (long) ((res + L/2.0) / L);
+            res = res - L * (double) div;
+        } 
+        if (res < -L/2.0) {
+            long div = (long) ((-res + L/2.0) / L);
+            res = res + L * (double) div;
+        }
+        return res;
     }
-    return res;
-}
 
     int fct_u(struct Part *P1, struct Part *P2) {
         double x1 = P1->x;
@@ -184,6 +184,48 @@ double modulo(double x){
             P2->ay = P2->ay + Fy;
         }
         return 0;
+    
+        }
+    
+    double inter_Pression(struct Part *P1, struct Part *P2) {
+        double x1 = P1->x;
+        double x2 = P2->x;
+        double y1 = P1->y;
+        double y2 = P2->y;
+        double dx = x2-x1;
+        double dy = y2-y1;
+        double r2 = (dx*dx + dy*dy);
+        double Fr = 0;
+        double inter = 0;
+        if (r2 > Rc*Rc) {
+            if (x2-x1 > L/2) {
+                x2 = x2 - L;
+            } else {
+                if (x2-x1 < -L/2) {
+                    x2 = x2 + L;
+                }
+            }
+            if (y2-y1 > L/2) {
+                y2 = y2 - L;
+            } else {
+                if (y2-y1 < -L/2) {
+                    y2 = y2 + L;
+                }
+            }
+            dx = x2-x1;
+            dy = y2-y1;
+            r2 = (dx*dx + dy*dy);
+        }
+        if (r2 < Rc*Rc) {
+            double r2i = 1/r2;
+            double r6i = r2i*r2i*r2i;
+            double r12i = r6i*r6i;
+            Fr = 24*epsilon*(2*r12i - r6i)*r2i;
+            inter = Fr*dx*dx+Fr*dy*dy;
+        
+            
+        }
+        return inter;
     
         }
 
@@ -311,7 +353,25 @@ double modulo(double x){
             printf("\n=== TOUTES LES PARTICULES N'EXISTENT PAS ===\n Seulement %d particules existent\n",nb);
             nb_part = nb;
         }
-}
+    }
+
+    double Pression(struct Part Liste[],double T) {
+        double V = L*L;
+        double gp = N*T/V;
+        double Fr = 0;
+        double inter = 0;
+        double Fx;
+        double Fy;
+        double dx;
+        double dy;
+        for (int i = 0; i < N-1; i++) {
+            for (int j = i+1; j < N; j++) {
+                inter += inter_Pression(&Liste[i],&Liste[j]);
+            }
+        }
+        // printf("GP : %f",gp);
+        return (gp + 1/(2*V)*inter);
+    }
 
 int main (int argc, char *argv[]) {
     double val;
@@ -357,7 +417,7 @@ int main (int argc, char *argv[]) {
     // ==== Initialisation du fichier ==== //
     FILE *fichier;
     fichier = fopen(nom_fichier,"w");
-    fprintf(fichier,"dt = %.12f; N = %d; L(\u03c3) = %f \nTemps; Energie(\u03b5); E_cin(\u03b5); E_pot(\u03b5); Temperature(\u03b5/kb)\n",dt,nb_part,L);
+    fprintf(fichier,"dt = %.12f; N = %d; L(\u03c3) = %f \nTemps; Energie(\u03b5); E_cin(\u03b5); E_pot(\u03b5); Temperature(\u03b5/kb); Pression (\u03b5/\u03c3\u00b2)\n",dt,nb_part,L);
     fclose(fichier);
 
     Force_liste(Liste);
@@ -366,14 +426,15 @@ int main (int argc, char *argv[]) {
     printf("dt = %f; N = %d; L = %f \u03c3\nEnergie initiale = %f \u03b5 ; E_cin = %f \u03b5 ; E_pot = %f \u03b5\n",dt,nb_part,L,E_cin+E_pot,E_cin, E_pot);
 
     fichier = fopen(nom_fichier,"a");
-    fprintf(fichier,"%f; %f; %f; %f; %f\n",0.0,E_cin+E_pot,E_cin,E_pot,0.0);
+    fprintf(fichier,"%f; %f; %f; %f; %f; %f\n",0.0,E_cin+E_pot,E_cin,E_pot,0.0,Pression(Liste,0.0));
     
     // ==== Boucle d'itération principale ==== //
     double compteur = 0;
     double compteur2 = 0;
     double T;
-    printf("Temps; Energie(\u03b5); E_cin(\u03b5); E_pot(\u03b5); Temperature(\u03b5/kb)\n");
-    printf("%f; %f; %f; %f; %f\n",0.,E_cin+E_pot,E_cin,E_pot,0.);
+    double P;
+    printf("Temps; Energie(\u03b5); E_cin(\u03b5); E_pot(\u03b5); Temperature(\u03b5/kb); Pression (\u03b5/\u03c3\u00b2)\n");
+    printf("%f; %f; %f; %f; %f; %f\n",0.,E_cin+E_pot,E_cin,E_pot,0.,Pression(Liste,0.0));
     for (double t = 0; t < t_max;t=t+dt) {
         // printf("Mode : %d",mode);
         if (mode == 0) {
@@ -387,11 +448,13 @@ int main (int argc, char *argv[]) {
         // printf("Temps : %f; Energie : %f\n",t,E_cin+E_pot);
         
         if (compteur2 >= t_max/10000-0.5*dt) { //Permet d'enregistrer 1000 valeurs
-            fprintf(fichier,"%f; %f; %f; %f; %f\n",t,E_cin+E_pot,E_cin,E_pot,T);
+            P = Pression(Liste,T);
+            fprintf(fichier,"%f; %f; %f; %f; %f; %f\n",t,E_cin+E_pot,E_cin,E_pot,T, P);
             compteur2 = 0;
         }
         if (compteur >= t_max/20-0.5*dt) { //Permet d'afficher 20 valeurs
-            printf("%f; %f; %f; %f; %f\n",t,E_cin+E_pot,E_cin,E_pot,T);
+            P = Pression(Liste,T);
+            printf("%f; %f; %f; %f; %f; %f\n",t,E_cin+E_pot,E_cin,E_pot,T,P);
     //          for (int i = 0; i < nb_part;i++) {
     //     afficher(&Liste[i]);
     // }
