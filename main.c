@@ -4,6 +4,17 @@
 #include <time.h>
 #include <string.h>
 
+// ==== Utilisation du programme ==== //
+// Compiler le programme avec la commande : gcc -O2 main.c -o filename.out
+// Exécuter le programme avec la commande : ./filename.out 
+// Le programme accepte soit 
+// - aucun argument et les conditions de base sont appliquées
+// - un seul argument gérant la seed
+// - 3 arguments gérant respectivement : le nombre de pas jusqu'a un temps t_star, le mode d'intégration (0 de Euler, 1 pour verlet), et le temps t_star
+//
+// Le programme crée un fichier nativement nommé "temp.txt" dans lequel il stocke 10000 séquence de mesures importantes notées dans le TP
+
+
 // ==== Initialisation des constantes ==== //
 
 
@@ -12,24 +23,18 @@ int seed_init = 22;
 #define N (10) //Nombre total de particule
 #define sigma (1)
 #define epsilon (1)
-#define seuil (0.5)
-#define kb (1.380649e-23)
+#define seuil (0.5) //Distance min entre deux particules a la génération d'une config random
 
 char nom_fichier[] = "./temp.txt"; //Nom du fichier d'enregistrement
 
 double t_star_defaut = 1; 
 double n_pas_defaut = 1e5;
-static double t_max = 10;
+static double t_max = 1;
 double dt;
 
 static double M = 1;
-#define n (sqrt(N))
-
 
 #define L (8.)
-
-// static double dl = 0.4 ;
-#define dl (L/n) //Ne marche que si N est un carré
 #define Rc (2.5)
 
 int nb_part = N;
@@ -46,7 +51,7 @@ int nb_part = N;
         double m;
     };
 
-    int constructeur(struct Part *P,double x, double y) {
+    int constructeur(struct Part *P,double x, double y) { //Facilite la création d'une particule
         P->x = x;
         P->y = y;
         P->ax = 0;
@@ -58,7 +63,7 @@ int nb_part = N;
         return 0;
     }
 
-    int afficher(struct Part *P) {
+    int afficher(struct Part *P) { //Affiche les informations d'une particule
         printf("x = %f : y = %f\n",P->x,P->y);
         printf("vx = %f : vy = %f\n",P->vx,P->vy);
         printf("ax = %f : ay = %f\n\n",P->ax,P->ay);
@@ -67,7 +72,7 @@ int nb_part = N;
     }
 
   
-    double modulo(double x){
+    double modulo(double x){ //Modulo spécifiquement appliqué pour nos conditions aux bors
         double res = x;
         if (res > L/2.0) {
             long div = (long) ((res + L/2.0) / L);
@@ -80,7 +85,7 @@ int nb_part = N;
         return res;
     }
 
-    int fct_u(struct Part *P1, struct Part *P2) {
+    int fct_u(struct Part *P1, struct Part *P2) { //Calcule le potentiel entre deux particules
         double x1 = P1->x;
         double x2 = P2->x;
         double y1 = P1->y;
@@ -118,7 +123,7 @@ int nb_part = N;
         return 0;
     }
 
-    int update_u(struct Part Liste[]) {
+    int update_u(struct Part Liste[]) { //Calcule le potentiel sur chaque particule
         for (int i = 0; i < nb_part; i++) {
             Liste[i].u = 0;
         }
@@ -130,7 +135,7 @@ int nb_part = N;
         return 0;
     }
 
-    int somme_E(struct Part Liste[], double *E_cin,double *E_pot) {
+    int somme_E(struct Part Liste[], double *E_cin,double *E_pot) { //Somme les énergies
         *E_cin = 0;
         *E_pot = 0;
         for (int i = 0; i < nb_part; i++) {
@@ -141,7 +146,7 @@ int nb_part = N;
 
 
 
-    int Force(struct Part *P1, struct Part *P2) {
+    int Force(struct Part *P1, struct Part *P2) { //Calcule la force appliquée sur deux particules
         double x1 = P1->x;
         double x2 = P2->x;
         double y1 = P1->y;
@@ -187,7 +192,7 @@ int nb_part = N;
     
         }
     
-    double inter_Pression(struct Part *P1, struct Part *P2) {
+    double inter_Pression(struct Part *P1, struct Part *P2) { //Calcule la contribution des interactions inter particule entre deux particules sur la pression
         double x1 = P1->x;
         double x2 = P2->x;
         double y1 = P1->y;
@@ -230,8 +235,8 @@ int nb_part = N;
         }
 
     
-
-    int Force_liste(struct Part Liste[]) {
+    
+    int Force_liste(struct Part Liste[]) { //Calcule les forces entre chaque particule de la liste
         for (int i = 0;i<nb_part-1;i++) {
             for (int j = i+1;j<nb_part;j++) {
                 Force(&Liste[i],&Liste[j]);
@@ -240,7 +245,7 @@ int nb_part = N;
         return 0;
     }
 
-    int Euler_step(struct Part Liste[],double *E_cin, double *E_pot) {
+    int Euler_step(struct Part Liste[],double *E_cin, double *E_pot) { //itération de la boucle d'intégration d'Euler
         // printf("AAAA");
         update_u(Liste);
         somme_E(Liste,E_cin,E_pot);
@@ -262,7 +267,7 @@ int nb_part = N;
         return 0;
     }
 
-    int Verlet_step(struct Part Liste[],double *E_cin, double *E_pot) {
+    int Verlet_step(struct Part Liste[],double *E_cin, double *E_pot) { //itération de la boucle d'intégration de Verlet
         double old_ax[nb_part];
         double old_ay[nb_part];
         update_u(Liste);
@@ -290,27 +295,30 @@ int nb_part = N;
     }
 
 
-    int config_crist(struct Part Liste[]) {
+    int config_crist_man(struct Part Liste[]) { //Configuration cristaline manuelle de 9 particules
         int compteur = 0;
+        double nb = 9;
+        double dl = L/3;
         double origin = (-L+dl)/2;
         double posx = origin;
         double posy = origin;
-        for (int i = 0;i<nb_part;i++) {
-            compteur ++;
+        for (int i = 0;i<nb;i++) {
+            compteur++;
             constructeur(&Liste[i],posx,posy);
-            posx = posx + dl;
-            if (compteur == (int)n) {
-                posy = posy + dl;
+            posx += dl;
+            if (compteur == 3) {
+                posy += dl;
                 posx = origin;
                 compteur = 0;
             }
         }
         return 0;
+
     }
 
-    int config_rdm(struct Part Liste[]) {
+    int config_rdm(struct Part Liste[]) { //Configuration aléatoire fonctionnelle || Il serait interessant au lieu d'utiliser rmin de passer par un E_seuil a ne pas dépasser
         double rmin = seuil;
-        int lim = 1000*N; //en gros on va générer lim positions avant d'abandonner
+        int lim = 1000*N; //Va générer lim positions avant d'abandonner et de considérer qu'il est impossible de générer d'autres particules respectant rmin
         double r2;
         double posx;
         double posy;
@@ -367,9 +375,10 @@ int nb_part = N;
         for (int i = 0; i < N-1; i++) {
             for (int j = i+1; j < N; j++) {
                 inter += inter_Pression(&Liste[i],&Liste[j]);
+
             }
         }
-        // printf("GP : %f",gp);
+        // printf("T=%f, ideal=%f, inter=%f, total=%f\n", T, gp, inter, gp+1/(2*V)*inter);
         return (gp + 1/(2*V)*inter);
     }
 
@@ -405,10 +414,8 @@ int main (int argc, char *argv[]) {
     struct Part Liste[N];
 
     config_rdm(Liste);
-    // constructeur(&Liste[0],-0.879013,0.495180);
-    // constructeur(&Liste[1],1.789280,-0.639103);
-    // constructeur(&Liste[2],-1.984904,-1.381889);
-    // constructeur(&Liste[3],1.565183,-0.247625);
+    // config_crist_man(Liste);
+
 
     // for (int i = 0; i < nb_part;i++) { 
     //     afficher(&Liste[i]);
@@ -417,7 +424,7 @@ int main (int argc, char *argv[]) {
     // ==== Initialisation du fichier ==== //
     FILE *fichier;
     fichier = fopen(nom_fichier,"w");
-    fprintf(fichier,"dt = %.12f; N = %d; L(\u03c3) = %f \nTemps; Energie(\u03b5); E_cin(\u03b5); E_pot(\u03b5); Temperature(\u03b5/kb); Pression (\u03b5/\u03c3\u00b2)\n",dt,nb_part,L);
+    fprintf(fichier,"dt = %.12f; N = %d; L(\u03c3) = %f \nTemps; Energie(\u03b5); E_cin(\u03b5); E_pot(\u03b5); Temperature(\u03b5/kb); Pression (\u03b5/\u03c3\u00b2); Pression GP(\u03b5/\u03c3\u00b2); Pression Interparticule(\u03b5/\u03c3\u00b2)\n",dt,nb_part,L);
     fclose(fichier);
 
     Force_liste(Liste);
@@ -426,35 +433,30 @@ int main (int argc, char *argv[]) {
     printf("dt = %f; N = %d; L = %f \u03c3\nEnergie initiale = %f \u03b5 ; E_cin = %f \u03b5 ; E_pot = %f \u03b5\n",dt,nb_part,L,E_cin+E_pot,E_cin, E_pot);
 
     fichier = fopen(nom_fichier,"a");
-    fprintf(fichier,"%f; %f; %f; %f; %f; %f\n",0.0,E_cin+E_pot,E_cin,E_pot,0.0,Pression(Liste,0.0));
+    fprintf(fichier,"%f; %f; %f; %f; %f; %f; %f; %f\n",0.0,E_cin+E_pot,E_cin,E_pot,0.0,Pression(Liste,0.0),0.,Pression(Liste,0.0));
     
     // ==== Boucle d'itération principale ==== //
     double compteur = 0;
     double compteur2 = 0;
     double T;
     double P;
-    printf("Temps; Energie(\u03b5); E_cin(\u03b5); E_pot(\u03b5); Temperature(\u03b5/kb); Pression (\u03b5/\u03c3\u00b2)\n");
-    printf("%f; %f; %f; %f; %f; %f\n",0.,E_cin+E_pot,E_cin,E_pot,0.,Pression(Liste,0.0));
+    printf("Temps; Energie(\u03b5); E_cin(\u03b5); E_pot(\u03b5); Temperature(\u03b5/kb); Pression (\u03b5/\u03c3\u00b2); Pression GP(\u03b5/\u03c3\u00b2); Pression Interparticule(\u03b5/\u03c3\u00b2)\n");
+    printf("%.4f; %.4f; %.4f; %.4f; %.4f; %.4f; %.4f; %.4f\n",0.,E_cin+E_pot,E_cin,E_pot,0.,Pression(Liste,0.0),0.,Pression(Liste,0.0));
     for (double t = 0; t < t_max;t=t+dt) {
-        // printf("Mode : %d",mode);
         if (mode == 0) {
             Euler_step(Liste,&E_cin,&E_pot);
-            // printf("Euler");
         } else {
-            // printf("Verlet");
             Verlet_step(Liste,&E_cin,&E_pot);
         }
         T = E_cin/nb_part;
-        // printf("Temps : %f; Energie : %f\n",t,E_cin+E_pot);
-        
         if (compteur2 >= t_max/10000-0.5*dt) { //Permet d'enregistrer 1000 valeurs
             P = Pression(Liste,T);
-            fprintf(fichier,"%f; %f; %f; %f; %f; %f\n",t,E_cin+E_pot,E_cin,E_pot,T, P);
+            fprintf(fichier,"%f; %f; %f; %f; %f; %f; %f; %f\n",t,E_cin+E_pot,E_cin,E_pot,T,P,N*T/(L*L),P-N*T/(L*L));
             compteur2 = 0;
         }
         if (compteur >= t_max/20-0.5*dt) { //Permet d'afficher 20 valeurs
             P = Pression(Liste,T);
-            printf("%f; %f; %f; %f; %f; %f\n",t,E_cin+E_pot,E_cin,E_pot,T,P);
+            printf("%.4f; %.4f; %.4f; %.4f; %.4f; %.4f; %.4f; %.4f\n",t,E_cin+E_pot,E_cin,E_pot,T,P,N*T/(L*L),P-N*T/(L*L));
     //          for (int i = 0; i < nb_part;i++) {
     //     afficher(&Liste[i]);
     // }
@@ -463,7 +465,6 @@ int main (int argc, char *argv[]) {
         compteur = compteur + dt;
         compteur2 = compteur2 + dt;
     }
-
     // ==== Fin du programme ==== //
     fclose(fichier);
     return 0;
